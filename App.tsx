@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Initialize data from DB
   useEffect(() => {
@@ -41,9 +42,15 @@ const App: React.FC = () => {
       setPreferences(dbPrefs);
       setIsLoading(false);
       
-      // Initialize Google Auth
-      initGoogleAuth((user) => {
-        handleLogin(user);
+      // Initialize Google Auth with improved callbacks
+      initGoogleAuth({
+        onSuccess: (user) => {
+          handleLogin(user);
+          setAuthError(null);
+        },
+        onError: (err) => {
+          setAuthError(err);
+        }
       });
     };
 
@@ -149,6 +156,8 @@ const App: React.FC = () => {
           onLogout={handleLogout} 
           notifications={notifications}
           onMarkRead={markNotificationRead}
+          authError={authError}
+          clearAuthError={() => setAuthError(null)}
         />
         
         {isSyncing && (

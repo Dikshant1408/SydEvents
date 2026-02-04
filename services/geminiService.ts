@@ -11,7 +11,7 @@ declare const process: {
 export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Event>[]> => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    console.error("Gemini API Key is missing.");
+    console.error("Gemini API Key is missing. Ensure process.env.API_KEY is set.");
     return [];
   }
   
@@ -46,8 +46,11 @@ export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Eve
       },
     });
 
+    // Use .text property as per the latest SDK guidelines
     const text = response.text;
-    return JSON.parse(text || "[]");
+    if (!text) return [];
+    
+    return JSON.parse(text);
   } catch (error) {
     console.error("Scraping error:", error);
     return [];
@@ -56,7 +59,7 @@ export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Eve
 
 export const getRecommendations = async (userPrompt: string, events: Event[]): Promise<string> => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) return "Recommendation service unavailable.";
+  if (!apiKey) return "Recommendation service unavailable. Please check API configuration.";
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -79,6 +82,6 @@ export const getRecommendations = async (userPrompt: string, events: Event[]): P
     return response.text || "I couldn't find any specific recommendations right now.";
   } catch (error) {
     console.error("Recommendation error:", error);
-    return "I'm having a bit of trouble connecting right now.";
+    return "I'm having a bit of trouble connecting to my recommendation engine right now.";
   }
 };

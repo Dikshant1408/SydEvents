@@ -38,34 +38,59 @@ export const decodeGoogleJwt = (token: string): any => {
   }
 };
 
+interface AuthCallbacks {
+  onSuccess: (user: User) => void;
+  onError?: (error: string) => void;
+  onLoading?: (isLoading: boolean) => void;
+}
+
 /**
  * Initialize Google Identity Services
  */
-export const initGoogleAuth = (onSuccess: (user: User) => void) => {
+export const initGoogleAuth = (callbacks: AuthCallbacks) => {
+  const { onSuccess, onError, onLoading } = callbacks;
+
   if (!window.google || !isClientConfigured()) {
+    console.warn("Google Auth skipped: GIS not loaded or Client ID not configured.");
     return;
   }
 
-  window.google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: (response: { credential: string }) => {
-      const payload = decodeGoogleJwt(response.credential);
-      if (payload) {
-        // For production, roles are verified via backend. 
-        // For this submission, we'll allow standard logins as 'user' role.
-        const user: User = {
-          id: payload.sub,
-          name: payload.name,
-          email: payload.email,
-          picture: payload.picture,
-          role: 'user' // Default role for standard Google login
-        };
-        onSuccess(user);
-      }
-    },
-    auto_select: false,
-    cancel_on_tap_outside: true,
-  });
+  try {
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: (response: { credential: string }) => {
+        onLoading?.(true);
+        const payload = decodeGoogleJwt(response.credential);
+        
+        if (payload && payload.sub && payload.email) {
+          const user: User = {
+            id: payload.sub,
+            name: payload.name || 'Google User',
+            email: payload.email,
+            picture: payload.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${payload.name}`,
+            role: 'user'
+          };
+          onSuccess(user);
+        } else {
+          onError?.("Invalid token payload received from Google.");
+        }
+        onLoading?.(false);
+      },
+      error_callback: (err: any) => {
+        console.error("GIS Error:", err);
+        let message = "An authentication error occurred.";
+        if (err.type === 'cookie_mismatch' || err.type === 'idp_iframe_timeout') {
+          message = "Connection issue. Please ensure third-party cookies are enabled.";
+        }
+        onError?.(message);
+      },
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+  } catch (e) {
+    console.error("Failed to initialize Google Auth", e);
+    onError?.("Critical failure during authentication setup.");
+  }
 };
 
 export const renderGoogleButton = (containerId: string) => {

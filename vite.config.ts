@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Specifically define process.env to avoid reference errors in the browser
+    // Specifically defining process.env ensures code that expects it (like some SDKs or legacy code)
+    // doesn't crash, while providing our API_KEY specifically.
     'process.env': {
       API_KEY: JSON.stringify(process.env.API_KEY || '')
     }
@@ -14,6 +15,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    sourcemap: false,
     rollupOptions: {
       input: './index.html'
     }

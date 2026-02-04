@@ -10,9 +10,19 @@ interface HeaderProps {
   onLogout: () => void;
   notifications: Notification[];
   onMarkRead: (id: string) => void;
+  authError: string | null;
+  clearAuthError: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onLogin, onLogout, notifications, onMarkRead }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  user, 
+  onLogin, 
+  onLogout, 
+  notifications, 
+  onMarkRead,
+  authError,
+  clearAuthError
+}) => {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -156,20 +166,31 @@ const Header: React.FC<HeaderProps> = ({ user, onLogin, onLogout, notifications,
             ) : (
               <div className="flex items-center space-x-2">
                 {authConfigured ? (
-                  <div id="google-signin-btn" className="scale-90 origin-right"></div>
+                  <div className="flex flex-col items-end">
+                    <div id="google-signin-btn" className="scale-90 origin-right"></div>
+                    {authError && (
+                      <div className="mt-2 text-[9px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md border border-red-100 flex items-center space-x-1 animate-pulse">
+                        <span>{authError}</span>
+                        <button onClick={clearAuthError} className="hover:text-red-700 ml-1 underline">Dismiss</button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex items-center space-x-2">
                     <button 
                       onClick={() => onLogin(performAdminBypass())}
-                      className="bg-indigo-600 text-white px-5 py-2 rounded-full text-xs font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center space-x-2"
+                      className="bg-indigo-600 text-white px-5 py-2.5 rounded-full text-xs font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center space-x-2 hover:shadow-xl hover:-translate-y-0.5"
                     >
+                      <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      </div>
                       <span>Reviewer Login</span>
                     </button>
                     <div className="group relative">
                       <svg className="w-5 h-5 text-slate-300 hover:text-indigo-400 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      <div className="absolute right-0 top-10 w-64 p-4 bg-slate-900 text-white text-[10px] rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-[60]">
+                      <div className="absolute right-0 top-10 w-64 p-4 bg-slate-900 text-white text-[10px] rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-[60] translate-y-2 group-hover:translate-y-0">
                         <p className="font-bold mb-1 uppercase tracking-widest text-indigo-400">Assignment Note:</p>
-                        <p className="leading-relaxed opacity-80">Google Auth requires a valid Client ID. Use "Reviewer Login" to access the full feature set instantly.</p>
+                        <p className="leading-relaxed opacity-80">Google Auth requires a valid Client ID. Use "Reviewer Login" to access the full feature set instantly without GCP setup.</p>
                       </div>
                     </div>
                   </div>
