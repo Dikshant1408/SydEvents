@@ -1,0 +1,7 @@
+{
+  "name": "SydEvents Pro - Event Discovery & Management",
+  "description": "A sophisticated event discovery platform for Sydney, featuring automated AI-powered scraping, an admin dashboard with status tracking, and an intelligent recommendation assistant.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
