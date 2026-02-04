@@ -1,23 +1,22 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event } from "../types";
 
-// TypeScript declaration to avoid 'process is not defined' error during build
+// TypeScript declaration to satisfy the compiler for the global process shim
 declare const process: {
   env: {
     API_KEY: string;
   };
 };
 
-const apiKey = process.env.API_KEY;
-
 export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Event>[]> => {
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    console.error("Gemini API Key is missing. Please set it in your Vercel Environment Variables.");
+    console.error("Gemini API Key is missing.");
     return [];
   }
   
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `List 5 real, upcoming events in ${city}, Australia. 
@@ -47,7 +46,8 @@ export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Eve
       },
     });
 
-    return JSON.parse(response.text || "[]");
+    const text = response.text;
+    return JSON.parse(text || "[]");
   } catch (error) {
     console.error("Scraping error:", error);
     return [];
@@ -55,10 +55,11 @@ export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Eve
 };
 
 export const getRecommendations = async (userPrompt: string, events: Event[]): Promise<string> => {
-  if (!apiKey) return "Recommendation service is currently unavailable. Please check API configuration.";
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return "Recommendation service unavailable.";
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const eventContext = events.map(e => `${e.title} at ${e.venueName} on ${e.dateTime}`).join('\n');
     
     const response = await ai.models.generateContent({
@@ -75,9 +76,9 @@ export const getRecommendations = async (userPrompt: string, events: Event[]): P
       }
     });
 
-    return response.text || "I couldn't find any specific recommendations right now. Feel free to browse the main listing!";
+    return response.text || "I couldn't find any specific recommendations right now.";
   } catch (error) {
     console.error("Recommendation error:", error);
-    return "I'm having a bit of trouble connecting to my knowledge base. Please try again in a moment.";
+    return "I'm having a bit of trouble connecting right now.";
   }
 };

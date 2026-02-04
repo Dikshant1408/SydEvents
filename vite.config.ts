@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Shimming process.env ensures that calls like process.env.API_KEY work in the browser
+    // Specifically define process.env to avoid reference errors in the browser
     'process.env': {
       API_KEY: JSON.stringify(process.env.API_KEY || '')
     }
