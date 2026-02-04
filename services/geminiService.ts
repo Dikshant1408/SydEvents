@@ -1,7 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event } from "../types";
 
-// The API key is injected by Vite's define block
+// TypeScript declaration to avoid 'process is not defined' error during build
+declare const process: {
+  env: {
+    API_KEY: string;
+  };
+};
+
 const apiKey = process.env.API_KEY;
 
 export const scrapeEvents = async (city: string = "Sydney"): Promise<Partial<Event>[]> => {
